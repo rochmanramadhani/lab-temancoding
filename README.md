@@ -10,10 +10,6 @@ Personal lab/playground app — served at https://lab.temancoding.my.id via Clou
 - **CD**: systemd timer on host runs `git pull && docker compose pull && up -d` every 30s
 - **Edge**: Cloudflare Tunnel (no public IP needed on host)
 
-> Originally used Watchtower for CD; replaced with systemd timer after
-> [containrrr/watchtower was archived in Dec 2025](https://github.com/containrrr/watchtower)
-> and broke against Docker 29's API.
-
 ## Layout
 
 ```

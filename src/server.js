@@ -50,7 +50,7 @@ app.get("/", (_req, res) => {
   <p style="color:#666;margin-top:2rem">
     served via <a href="https://www.cloudflare.com/products/tunnel/">cloudflare tunnel</a>
     → docker compose → omans VM (tailnet).
-    auto-deployed by github actions + watchtower on push to <code>main</code>.
+    auto-deployed by github actions + systemd timer on push to <code>main</code>.
   </p>
 </body>
 </html>`);

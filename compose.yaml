@@ -13,8 +13,6 @@ services:
       interval: 30s
       timeout: 5s
       retries: 3
-    labels:
-      - "com.centurylinklabs.watchtower.enable=true"
 
   cloudflared:
     image: cloudflare/cloudflared:latest
@@ -23,5 +21,4 @@ services:
     command: tunnel --no-autoupdate run --token ${TUNNEL_TOKEN}
     depends_on:
       - app
-# Auto-deploy is handled by a systemd timer on the host (see deploy/),
-# not Watchtower (archived Dec 2025, broke with Docker 29 API).
+# Auto-deploy is handled by a systemd timer on the host — see deploy/.
