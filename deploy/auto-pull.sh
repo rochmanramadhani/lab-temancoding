@@ -1,9 +1,12 @@
 #!/usr/bin/env bash
-# Pull latest images for the lab stack and restart any container whose
-# image digest changed. Logs to journald via systemd unit.
+# Pull latest images for the stack and recreate any container whose
+# image digest changed. Designed to be invoked by a systemd timer.
+# Logs to journald via the unit.
 set -euo pipefail
 
-cd /root/lab
+# Resolve repo root from the script location so this works no matter
+# where the repo is cloned (default is /root/lab).
+cd "$(dirname "$0")/.."
 
 git fetch -q origin main
 LOCAL=$(git rev-parse HEAD)

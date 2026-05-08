@@ -1,27 +1,43 @@
 import express from "express";
+import pino from "pino";
+import pinoHttp from "pino-http";
 import os from "node:os";
 
-const app = express();
-const port = process.env.PORT || 3000;
-const commit = process.env.GIT_COMMIT || "dev";
-const buildTime = process.env.BUILD_TIME || new Date().toISOString();
+const log = pino({ level: process.env.LOG_LEVEL ?? "info" });
 
-app.get("/healthz", (_req, res) => res.json({ ok: true }));
+const port = Number(process.env.PORT ?? 3000);
+const commit = process.env.GIT_COMMIT ?? "dev";
+const buildTime = process.env.BUILD_TIME ?? new Date().toISOString();
+const version = process.env.npm_package_version ?? "0.0.0";
 
-app.get("/", (_req, res) => {
-  const payload = {
-    message: "halo dari lab.temancoding.my.id",
-    hostname: os.hostname(),
-    commit,
-    buildTime,
-    serverTime: new Date().toISOString(),
-    uptimeSeconds: Math.round(process.uptime()),
-    nodeVersion: process.version,
-    deployedBy: "systemd timer (auto-pull every 30s)",
-  };
+export function createApp() {
+  const app = express();
 
-  res.set("content-type", "text/html; charset=utf-8");
-  res.send(`<!doctype html>
+  app.disable("x-powered-by");
+  app.use(pinoHttp({ logger: log }));
+
+  app.get("/healthz", (_req, res) => res.json({ ok: true }));
+
+  app.get("/version", (_req, res) =>
+    res.json({
+      version,
+      commit,
+      buildTime,
+      node: process.version,
+      uptimeSeconds: Math.round(process.uptime()),
+    })
+  );
+
+  app.get("/", (_req, res) => {
+    res.set("content-type", "text/html; charset=utf-8");
+    res.send(html({ hostname: os.hostname() }));
+  });
+
+  return app;
+}
+
+function html({ hostname }) {
+  return `<!doctype html>
 <html lang="id">
 <head>
   <meta charset="utf-8">
@@ -38,24 +54,32 @@ app.get("/", (_req, res) => {
   </style>
 </head>
 <body>
-  <h1>halo dari ${payload.hostname} 👋</h1>
+  <h1>halo dari ${hostname} 👋</h1>
   <div class="row">
-    <div class="k">commit</div><div><code>${payload.commit}</code></div>
-    <div class="k">build time</div><div>${payload.buildTime}</div>
-    <div class="k">server time</div><div>${payload.serverTime}</div>
-    <div class="k">uptime</div><div>${payload.uptimeSeconds}s</div>
-    <div class="k">node</div><div>${payload.nodeVersion}</div>
-    <div class="k">deployed by</div><div>${payload.deployedBy}</div>
+    <div class="k">version</div><div><code>${version}</code></div>
+    <div class="k">commit</div><div><code>${commit}</code></div>
+    <div class="k">build time</div><div>${buildTime}</div>
+    <div class="k">server time</div><div>${new Date().toISOString()}</div>
+    <div class="k">uptime</div><div>${Math.round(process.uptime())}s</div>
+    <div class="k">node</div><div>${process.version}</div>
+    <div class="k">deployed by</div><div>systemd timer (auto-pull every 30s)</div>
   </div>
   <p style="color:#666;margin-top:2rem">
     served via <a href="https://www.cloudflare.com/products/tunnel/">cloudflare tunnel</a>
     → docker compose → omans VM (tailnet).
     auto-deployed by github actions + systemd timer on push to <code>main</code>.
   </p>
+  <p style="color:#666">
+    machine-readable status: <a href="/version"><code>/version</code></a> &middot;
+    health: <a href="/healthz"><code>/healthz</code></a>
+  </p>
 </body>
-</html>`);
-});
+</html>`;
+}
 
-app.listen(port, () => {
-  console.log(`listening :${port} commit=${commit} build=${buildTime}`);
-});
+if (import.meta.url === `file://${process.argv[1]}`) {
+  const app = createApp();
+  app.listen(port, () => {
+    log.info({ port, commit, buildTime, version }, "listening");
+  });
+}
