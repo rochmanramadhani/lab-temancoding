@@ -1,0 +1,38 @@
+services:
+  app:
+    image: ghcr.io/rochmanramadhani/lab-temancoding:latest
+    container_name: lab-app
+    restart: unless-stopped
+    pull_policy: always
+    expose:
+      - "3000"
+    environment:
+      - PORT=3000
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: lab-cloudflared
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run --token ${TUNNEL_TOKEN}
+    depends_on:
+      - app
+
+  watchtower:
+    image: containrrr/watchtower:latest
+    container_name: lab-watchtower
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    command:
+      - --interval=30
+      - --cleanup
+      - --label-enable
+    environment:
+      - WATCHTOWER_POLL_INTERVAL=30
