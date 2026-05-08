@@ -10,7 +10,7 @@ auto-deploy in about 5 minutes.
 
 - **App**: Node.js + Express (Node 22, ESM) + pino structured logs
 - **Container**: Docker compose (app + cloudflared)
-- **CI**: GitHub Actions — builds image on every push, runs tests on push + PR
+- **CI**: GitHub Actions — single `ci.yml` runs `test` then `build` (build is gated on test passing)
 - **CD**: systemd timer on host runs `git pull && docker compose pull && up -d` every 30s
 - **Edge**: Cloudflare Tunnel — no public IP needed, SSL terminated at CF edge
 - **Image registry**: GHCR (free for public repos)
@@ -42,8 +42,8 @@ auto-deploy in about 5 minutes.
 │   └── install.sh             # run once on host
 ├── .github/
 │   ├── workflows/
-│   │   ├── build.yml          # build + push image to GHCR
-│   │   └── test.yml           # npm test + format check
+│   │   ├── ci.yml             # test → build → push image to GHCR
+│   │   └── dependabot-auto-merge.yml  # auto-merge patch/minor dep bumps
 │   ├── dependabot.yml
 │   ├── PULL_REQUEST_TEMPLATE.md
 │   └── ISSUE_TEMPLATE/
@@ -96,9 +96,10 @@ defaults at the top of `bootstrap.sh`, or pass them as env vars when running it.
 git push origin main
         │
         ▼
-GitHub Actions (build.yml)
-  • npm test + format check (test.yml runs in parallel)
-  • docker build → push to ghcr.io/<owner>/<repo>:latest  (~20–25s)
+GitHub Actions (ci.yml)
+  • test job:  npm ci → npm run format:check → npm test  (~25s)
+  • build job: docker build → push to ghcr.io/<owner>/<repo>:latest  (~25s)
+  •   build only runs after test passes (sequential, gated)
         │
         ▼
 omans VM
@@ -144,6 +145,8 @@ but flip them on for anything that matters:
   gh api -X PUT repos/:owner/:repo/branches/main/protection \
     --input - <<<'{"required_status_checks":{"strict":true,"contexts":["test","build"]},"enforce_admins":false,"required_pull_request_reviews":null,"restrictions":null}'
   ```
+  Note: enabling branch protection makes the dependabot auto-merge workflow
+  actually queue (instead of merging immediately).
 - **External uptime monitor** — point UptimeRobot or BetterStack at `/healthz`.
   Free tier covers 50 monitors at 5-minute intervals.
 - **Error tracking** — Sentry SDK (`@sentry/node`) wired into pino.
