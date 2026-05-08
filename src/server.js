@@ -2,13 +2,19 @@ import express from "express";
 import pino from "pino";
 import pinoHttp from "pino-http";
 import os from "node:os";
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+import { dirname, resolve } from "node:path";
 
 const log = pino({ level: process.env.LOG_LEVEL ?? "info" });
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const pkg = JSON.parse(readFileSync(resolve(__dirname, "../package.json"), "utf8"));
 
 const port = Number(process.env.PORT ?? 3000);
 const commit = process.env.GIT_COMMIT ?? "dev";
 const buildTime = process.env.BUILD_TIME ?? new Date().toISOString();
-const version = process.env.npm_package_version ?? "0.0.0";
+const version = pkg.version;
 
 export function createApp() {
   const app = express();
