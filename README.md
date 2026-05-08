@@ -1,5 +1,10 @@
 # lab-temancoding
 
+[![ci](https://github.com/rochmanramadhani/lab-temancoding/actions/workflows/ci.yml/badge.svg)](https://github.com/rochmanramadhani/lab-temancoding/actions/workflows/ci.yml)
+[![live](https://img.shields.io/website?url=https%3A%2F%2Flab.temancoding.my.id&label=lab.temancoding.my.id&up_message=up&down_message=down)](https://lab.temancoding.my.id)
+[![license](https://img.shields.io/github/license/rochmanramadhani/lab-temancoding)](./LICENSE)
+[![node](https://img.shields.io/badge/node-22%20%7C%2024-339933?logo=node.js&logoColor=white)](./Dockerfile)
+
 Personal lab/playground app — served at <https://lab.temancoding.my.id> via Cloudflare Tunnel.
 
 Also serves as a **starter template** for any tiny self-hosted project: clone it,
