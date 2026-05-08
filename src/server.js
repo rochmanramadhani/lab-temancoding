@@ -17,6 +17,7 @@ app.get("/", (_req, res) => {
     serverTime: new Date().toISOString(),
     uptimeSeconds: Math.round(process.uptime()),
     nodeVersion: process.version,
+    deployedBy: "systemd timer (auto-pull every 30s)",
   };
 
   res.set("content-type", "text/html; charset=utf-8");
@@ -44,6 +45,7 @@ app.get("/", (_req, res) => {
     <div class="k">server time</div><div>${payload.serverTime}</div>
     <div class="k">uptime</div><div>${payload.uptimeSeconds}s</div>
     <div class="k">node</div><div>${payload.nodeVersion}</div>
+    <div class="k">deployed by</div><div>${payload.deployedBy}</div>
   </div>
   <p style="color:#666;margin-top:2rem">
     served via <a href="https://www.cloudflare.com/products/tunnel/">cloudflare tunnel</a>
