@@ -37,7 +37,7 @@ app.get("/", (_req, res) => {
   </style>
 </head>
 <body>
-  <h1>halo dari ${payload.hostname}</h1>
+  <h1>halo dari ${payload.hostname} 👋</h1>
   <div class="row">
     <div class="k">commit</div><div><code>${payload.commit}</code></div>
     <div class="k">build time</div><div>${payload.buildTime}</div>
