@@ -5,10 +5,14 @@ Personal lab/playground app — served at https://lab.temancoding.my.id via Clou
 ## Stack
 
 - **App**: Node.js + Express (Node 22, ESM)
-- **Container**: Docker compose (app + cloudflared + watchtower)
+- **Container**: Docker compose (app + cloudflared)
 - **CI**: GitHub Actions builds image, pushes to GHCR on push to `main`
-- **CD**: Watchtower polls GHCR every 30s, auto-pulls + restarts on new image
+- **CD**: systemd timer on host runs `git pull && docker compose pull && up -d` every 30s
 - **Edge**: Cloudflare Tunnel (no public IP needed on host)
+
+> Originally used Watchtower for CD; replaced with systemd timer after
+> [containrrr/watchtower was archived in Dec 2025](https://github.com/containrrr/watchtower)
+> and broke against Docker 29's API.
 
 ## Layout
 
@@ -17,8 +21,13 @@ Personal lab/playground app — served at https://lab.temancoding.my.id via Clou
 ├── src/server.js         # Express app
 ├── package.json
 ├── Dockerfile
-├── compose.yaml          # app + cloudflared + watchtower
+├── compose.yaml          # app + cloudflared
 ├── .env.example          # TUNNEL_TOKEN
+├── deploy/               # systemd timer + auto-pull script for CD
+│   ├── auto-pull.sh
+│   ├── lab-deploy.service
+│   ├── lab-deploy.timer
+│   └── install.sh        # bootstrap (run once on host)
 ├── .github/workflows/    # CI build + push to GHCR
 └── README.md
 ```
@@ -36,14 +45,23 @@ npm run dev
 On omans VM:
 
 ```sh
-git clone git@github.com:rochmanramadhani/lab-temancoding.git ~/lab
-cd ~/lab
+git clone https://github.com/rochmanramadhani/lab-temancoding.git /root/lab
+cd /root/lab
 cp .env.example .env
 # edit .env, paste Cloudflare Tunnel token
 docker compose up -d
+sudo bash deploy/install.sh   # installs the systemd timer
 ```
 
 After this, every `git push` to `main` triggers:
 1. GitHub Actions build → push image to `ghcr.io/rochmanramadhani/lab-temancoding:latest`
-2. Watchtower (running on omans) detects new image within 30s
-3. Container restarts with new code, no manual deploy
+2. systemd timer on omans (runs every 30s) does `git pull && docker compose pull && up -d`
+3. Container is recreated only if image digest changed — no manual deploy
+
+## Logs
+
+```sh
+journalctl -u lab-deploy.service -f    # CD log on host
+docker logs -f lab-app                  # app log
+docker logs -f lab-cloudflared          # tunnel log
+```

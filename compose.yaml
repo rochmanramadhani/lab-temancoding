@@ -23,16 +23,5 @@ services:
     command: tunnel --no-autoupdate run --token ${TUNNEL_TOKEN}
     depends_on:
       - app
-
-  watchtower:
-    image: containrrr/watchtower:latest
-    container_name: lab-watchtower
-    restart: unless-stopped
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-    command:
-      - --interval=30
-      - --cleanup
-      - --label-enable
-    environment:
-      - WATCHTOWER_POLL_INTERVAL=30
+# Auto-deploy is handled by a systemd timer on the host (see deploy/),
+# not Watchtower (archived Dec 2025, broke with Docker 29 API).

@@ -1,0 +1,9 @@
+[Unit]
+Description=lab-temancoding auto-pull (git + image)
+After=docker.service network-online.target
+Wants=network-online.target
+ConditionPathExists=/root/lab/deploy/auto-pull.sh
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/env bash /root/lab/deploy/auto-pull.sh
